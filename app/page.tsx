@@ -82,7 +82,7 @@ function SplitChars({ text }: { text: string }) {
   return (
     <span aria-label={text} className="inline-block whitespace-nowrap">
       {text.split("").map((c, i) => (
-        <span key={i} aria-hidden className="inline-block overflow-hidden px-[0.02em] pb-[0.06em] align-bottom">
+        <span key={i} aria-hidden className="inline-block overflow-hidden px-[0.06em] pb-[0.3em] -mb-[0.3em] align-bottom">
           <span className="hero-char pre inline-block will-change-transform">{c}</span>
         </span>
       ))}

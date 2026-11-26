@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "./CartProvider";
 
 const GOLD = "#C49452";
+const INK = "#141211";
 const serif = { fontFamily: "var(--font-display), Georgia, serif" } as const;
 
 const NAV = [
@@ -34,13 +35,12 @@ export default function Header() {
   const [hidden, setHidden] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  // transparent over the hero on home, always solid elsewhere
+  // frosted white glass: lighter over the hero on home, a bit more opaque once scrolled / on other pages
   const solid = !isHome || scrolled;
 
   // close the mobile menu on navigation
   useEffect(() => setOpen(false), [pathname]);
 
-  // scroll state: works with native scroll and with Lenis (Lenis still scrolls the window)
   useEffect(() => {
     let last = window.scrollY;
     const onScroll = () => {
@@ -56,7 +56,6 @@ export default function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [isHome]);
 
-  // close the mobile menu with Escape
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
@@ -64,10 +63,6 @@ export default function Header() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  /**
-   * On the home page, the Home / logo link scrolls back to the top.
-   * Every other link is left alone so <Link> navigates to its page.
-   */
   const handleClick = (e: React.MouseEvent, href: string) => {
     setOpen(false);
     if (!isHome || href !== "/") return;
@@ -88,19 +83,25 @@ export default function Header() {
         <motion.div
           animate={{ y: hidden && !open ? "-110%" : "0%" }}
           transition={{ duration: 0.6, ease: [0.2, 0.7, 0.2, 1] }}
-          className={`relative transition-[background,backdrop-filter,border-color] duration-500 ${
+          className={`relative border-b backdrop-blur-xl backdrop-saturate-150 transition-[background-color,border-color,box-shadow] duration-500 ${
             solid || open
-              ? "border-b border-white/10 bg-[#141211]/80 backdrop-blur-xl"
-              : "border-b border-transparent bg-gradient-to-b from-black/50 to-transparent"
+              ? "border-white/60 bg-white/75 shadow-[0_8px_30px_-12px_rgba(20,18,17,0.25)]"
+              : "border-white/30 bg-white/50 shadow-none"
           }`}
         >
-          <div className="mx-auto flex h-[80px] max-w-[1600px] items-center justify-between px-5 sm:px-10">
-            {/* Logo (white plate, artwork zoomed slightly to crop the PNG's empty padding) */}
+          {/* soft light sheen across the glass */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/60 via-white/10 to-transparent"
+          />
+
+          <div className="relative mx-auto flex h-[80px] max-w-[1600px] items-center justify-between px-5 sm:px-10">
+            {/* Logo: no white plate now; multiply blends the PNG's white into the glass */}
             <Link
               href="/"
               onClick={(e) => handleClick(e, "/")}
               aria-label="Jubba House, home"
-              className="relative z-[60] block h-12 w-28 shrink-0 overflow-hidden bg-white sm:h-14 sm:w-32"
+              className="relative z-[60] block h-12 w-28 shrink-0 overflow-hidden sm:h-14 sm:w-32"
             >
               <Image
                 src="/logo.png"
@@ -108,7 +109,7 @@ export default function Header() {
                 fill
                 priority
                 sizes="128px"
-                className="origin-center scale-[2.6] object-contain"
+                className="origin-center scale-[2.6] object-contain mix-blend-multiply"
               />
             </Link>
 
@@ -119,7 +120,7 @@ export default function Header() {
                   key={n.href}
                   href={n.href}
                   onClick={(e) => handleClick(e, n.href)}
-                  className="group relative py-2 text-[11px] font-medium uppercase tracking-[.32em] text-white/85 transition-colors hover:text-white"
+                  className="group relative py-2 text-[11px] font-medium uppercase tracking-[.32em] text-[#141211]/75 transition-colors hover:text-[#141211]"
                 >
                   {n.label}
                   <span
@@ -135,7 +136,7 @@ export default function Header() {
               <Link
                 href="/cart"
                 aria-label={`Cart, ${count} ${count === 1 ? "item" : "items"}`}
-                className="relative flex h-11 w-11 items-center justify-center text-white/85 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+                className="relative flex h-11 w-11 items-center justify-center text-[#141211]/75 transition-colors hover:text-[#141211] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#141211]"
               >
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <path d="M5 8h14l-1 12H6L5 8z" />
@@ -156,7 +157,7 @@ export default function Header() {
                     whileHover={{ scale: 1.04 }}
                     whileTap={{ scale: 0.97 }}
                     transition={{ type: "spring", stiffness: 400, damping: 22 }}
-                    className="flex items-center border border-white/40 px-5 py-2.5 text-[10px] font-medium uppercase tracking-[.28em] text-white transition-colors hover:bg-white/10"
+                    className="flex items-center border border-[#141211]/40 px-5 py-2.5 text-[10px] font-medium uppercase tracking-[.28em] text-[#141211] transition-colors hover:bg-[#141211]/5"
                   >
                     Login
                   </motion.span>
@@ -166,7 +167,7 @@ export default function Header() {
                     whileHover={{ scale: 1.04 }}
                     whileTap={{ scale: 0.97 }}
                     transition={{ type: "spring", stiffness: 400, damping: 22 }}
-                    className="flex items-center px-5 py-2.5 text-[10px] font-medium uppercase tracking-[.28em] text-[#141211]"
+                    className="flex items-center px-5 py-2.5 text-[10px] font-medium uppercase tracking-[.28em] text-[#141211] shadow-sm"
                     style={{ background: GOLD }}
                   >
                     Register
@@ -183,11 +184,11 @@ export default function Header() {
               >
                 <motion.span
                   animate={open ? { rotate: 45, y: 3.5 } : { rotate: 0, y: 0 }}
-                  className="block h-px w-6 bg-white"
+                  className="block h-px w-6 bg-[#141211]"
                 />
                 <motion.span
                   animate={open ? { rotate: -45, y: -3.5 } : { rotate: 0, y: 0 }}
-                  className="block h-px w-6 bg-white"
+                  className="block h-px w-6 bg-[#141211]"
                 />
               </button>
             </div>
@@ -195,7 +196,7 @@ export default function Header() {
         </motion.div>
       </motion.header>
 
-      {/* Mobile full-screen menu */}
+      {/* Mobile full-screen menu (frosted white to match the header) */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -204,7 +205,7 @@ export default function Header() {
             animate={{ clipPath: "inset(0 0 0% 0)" }}
             exit={{ clipPath: "inset(0 0 100% 0)" }}
             transition={{ duration: 0.7, ease: [0.76, 0, 0.24, 1] }}
-            className="fixed inset-0 z-40 flex flex-col justify-between bg-[#141211] px-6 pb-10 pt-32 text-white md:hidden"
+            className="fixed inset-0 z-40 flex flex-col justify-between bg-white/90 px-6 pb-10 pt-32 text-[#141211] backdrop-blur-2xl md:hidden"
           >
             <nav aria-label="Mobile" className="flex flex-col">
               {NAV.map((n, i) => (
@@ -217,9 +218,9 @@ export default function Header() {
                   <Link
                     href={n.href}
                     onClick={(e) => handleClick(e, n.href)}
-                    className="flex items-baseline gap-4 border-t border-white/15 py-5"
+                    className="flex items-baseline gap-4 border-t border-[#141211]/15 py-5"
                   >
-                    <span className="w-6 text-[10px] tracking-[.2em] text-white/50">
+                    <span className="w-6 text-[10px] tracking-[.2em] text-[#141211]/50">
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <span className="text-5xl" style={{ ...serif, fontWeight: 300 }}>
@@ -228,7 +229,7 @@ export default function Header() {
                   </Link>
                 </motion.div>
               ))}
-              <div className="border-t border-white/15" />
+              <div className="border-t border-[#141211]/15" />
             </nav>
 
             <div>
@@ -239,7 +240,7 @@ export default function Header() {
                 <Link
                   href="/login"
                   onClick={() => setOpen(false)}
-                  className="flex items-center justify-center border border-white/40 px-6 py-4 text-[11px] font-medium uppercase tracking-[.28em] text-white"
+                  className="flex items-center justify-center border border-[#141211]/40 px-6 py-4 text-[11px] font-medium uppercase tracking-[.28em] text-[#141211]"
                 >
                   Login
                 </Link>
