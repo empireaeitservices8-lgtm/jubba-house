@@ -11,9 +11,13 @@
  *   /public/videos/hero.mp4            full-screen fashion video (muted loop)
  *   /public/images/hero1.png ...       transparent PNG cut-outs for the Lookbook (see LOOK_IMAGES)
  *   /public/jubba-logo-light.png       included
+ *
+ * Routes needed: app/men/page.tsx and app/kids/page.tsx
+ * (category filter arrives as ?category=kurta, ?category=indo-western, ...)
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import Lenis from "lenis";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -23,8 +27,33 @@ gsap.registerPlugin(ScrollTrigger);
 
 const GOLD = "#C49452";
 
-const MEN = ["Kurtha", "Suit", "Jodhpuri", "Sherwani", "Indo Western", "Thobe", "Kandura", "Jubba Pajama"];
-const KIDS = ["Kurtha", "Suit", "Jodhpuri", "Sherwani", "Thobe", "Kandura", "Jubba Pajama"];
+const MEN = ["kurta", "Suit", "Jodhpuri", "Sherwani", "Indo Western", "Thobe", "Kandura", "Jubba", "Pajama"];
+const KIDS = ["kurta", "Suit", "Jodhpuri", "Sherwani", "Thobe", "Kandura", "Jubba Pajama"];
+
+/** Collection stage images (transparent PNGs in /public/images/...). */
+const COLLECTION_IMAGES: Record<"men" | "kids", Record<string, string>> = {
+  men: {
+    "kurta": "/images/men/kurta.jpg",
+    "Suit": "/images/men/suit.jpg",
+    "Jodhpuri": "/images/men/jodhpuri.jpg",
+    "Sherwani": "/images/men/sherwani.jpg",
+    "Indo Western": "/images/men/indo-western.jpg",
+    "Thobe": "/images/men/thobe.jpg",
+    "Kandura": "/images/men/kandura.jpg",
+    "Jubba": "/images/men/jubba.jpg",
+    "Pajama": "/images/men/pajama.jpg",
+
+  },
+  kids: {
+    "kurta": "/images/kids/kurta.jpg",
+    "Suit": "/images/kids/suit.jpg",
+    "Jodhpuri": "/images/kids/jodhpuri.jpg",
+    "Sherwani": "/images/kids/sherwani.jpg",
+    "Thobe": "/images/kids/thobe.jpg",
+    "Kandura": "/images/kids/kandura.jpg",
+    "Jubba Pajama": "/images/kids/jubba-pajama.jpg",
+  },
+};
 
 /** Lookbook slider images (transparent PNGs in /public/images). Add or remove freely. */
 const LOOK_IMAGES = [
@@ -38,9 +67,11 @@ const LOOK_IMAGES = [
   "/images/hero8.png",
   "/images/hero9.png",
 ];
-const SLIDE_INTERVAL = 3800; // ms between automatic slides (was 5000)
+const SLIDE_INTERVAL = 3800; // ms between automatic slides
 
 const serif = { fontFamily: "var(--font-display), Georgia, serif" } as const;
+
+const slug = (s: string) => s.toLowerCase().replace(/\s+/g, "-");
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -99,7 +130,7 @@ function Silhouette() {
 /* ------------------------------------------------------------------ */
 /*  Hero: video + type only                                            */
 /* ------------------------------------------------------------------ */
-function Hero({ onScrollTo }: { onScrollTo: (target: string) => void }) {
+function Hero() {
   // raw mouse (-0.5 .. 0.5), smoothed with springs
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
@@ -182,26 +213,28 @@ function Hero({ onScrollTo }: { onScrollTo: (target: string) => void }) {
             className="hero-fade pre text-xl font-normal leading-snug text-white sm:text-2xl md:text-3xl"
             style={{ ...serif, textShadow: "0 2px 24px rgba(0,0,0,.8)" }}
           >
-            Kurthas, sherwanis, thobes and more, tailored for men and kids who dress with intention.
+            kurtas, sherwanis, thobes and more, tailored for men and kids who dress with intention.
           </p>
         </div>
 
         <div className="hero-fade pre flex items-center gap-3">
-          {["Shop Men", "Shop Kids"].map((label, i) => (
-            <motion.button
-              key={label}
-              onClick={() => onScrollTo("#collections")}
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
-              transition={{ type: "spring", stiffness: 400, damping: 22 }}
-              className={`group flex items-center gap-3 px-6 py-3.5 text-[10px] font-medium uppercase tracking-[.28em] ${
-                i === 0 ? "text-[#141211]" : "border border-white/40 text-white backdrop-blur-sm hover:bg-white/10"
-              }`}
-              style={i === 0 ? { background: GOLD } : undefined}
-            >
-              {label}
-              <span className="transition-transform duration-300 group-hover:translate-x-1">&rarr;</span>
-            </motion.button>
+          {[
+            { label: "Shop Men", href: "/men" },
+            { label: "Shop Kids", href: "/kids" },
+          ].map(({ label, href }, i) => (
+            <Link key={label} href={href} className="pointer-events-auto">
+              <motion.div
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 400, damping: 22 }}
+                className={`group flex items-center gap-3 px-6 py-3.5 text-[10px] font-medium uppercase tracking-[.28em] ${i === 0 ? "text-[#141211]" : "border border-white/40 text-white backdrop-blur-sm hover:bg-white/10"
+                  }`}
+                style={i === 0 ? { background: GOLD } : undefined}
+              >
+                {label}
+                <span className="transition-transform duration-300 group-hover:translate-x-1">&rarr;</span>
+              </motion.div>
+            </Link>
           ))}
         </div>
       </div>
@@ -242,7 +275,7 @@ const SLOT = (rel: number) => {
 
 const charVariants = {
   hidden: { opacity: 0, filter: "blur(10px)", x: 26 },
-  show: { opacity: 1, filter: "blur(0px)", x: 0, transition: { duration: 0.7, ease: [0.2, 0.7, 0.2, 1] as const } }, // was 0.9
+  show: { opacity: 1, filter: "blur(0px)", x: 0, transition: { duration: 0.7, ease: [0.2, 0.7, 0.2, 1] as const } },
 };
 
 /** Letters drift in from the right, blurred, then sharpen. */
@@ -253,7 +286,7 @@ function BlurChars({ text }: { text: string }) {
       initial="hidden"
       whileInView="show"
       viewport={{ once: true, amount: 0.6 }}
-      transition={{ staggerChildren: 0.035 }} // was 0.05
+      transition={{ staggerChildren: 0.035 }}
       className="inline-block"
     >
       {text.split(" ").map((w, wi) => (
@@ -329,7 +362,7 @@ function Lookbook() {
                   initial={{ y: "100%" }}
                   animate={{ y: "0%" }}
                   exit={{ y: "-100%" }}
-                  transition={{ duration: 0.5, ease: [0.2, 0.7, 0.2, 1] }} // was 0.6
+                  transition={{ duration: 0.5, ease: [0.2, 0.7, 0.2, 1] }}
                 >
                   {pad(current + 1)}
                 </motion.span>
@@ -368,7 +401,7 @@ function Lookbook() {
                   alt={`Jubba House look ${i + 1}`}
                   initial={false}
                   animate={SLOT(rel)}
-                  transition={{ duration: 0.75, ease: [0.2, 0.7, 0.2, 1] }} // was 0.95
+                  transition={{ duration: 0.75, ease: [0.2, 0.7, 0.2, 1] }}
                   style={{ x: "-50%", originX: 0.5, originY: 1, zIndex: 10 - rel }}
                   className="pointer-events-none absolute bottom-0 h-full w-auto object-contain object-bottom drop-shadow-[0_30px_40px_rgba(0,0,0,.45)] will-change-transform"
                   onError={() => setFailed((f) => [...f, src])}
@@ -430,76 +463,183 @@ function Lookbook() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Collections (Framer Motion in-view stagger)                        */
+/*  Collections: arch stage + hover index                              */
 /* ------------------------------------------------------------------ */
-const listVariants = { hidden: {}, show: { transition: { staggerChildren: 0.09, delayChildren: 0.15 } } };
-const itemVariants = {
-  hidden: { opacity: 0, y: 36 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.2, 0.7, 0.2, 1] as const } },
-};
+const TABS = [
+  { key: "men", label: "Men", items: MEN, arch: "#6E1F2A", blurb: "Sherwanis, jodhpuris and everyday kurtas." },
+  { key: "kids", label: "Kids", items: KIDS, arch: "#1F3A2E", blurb: "Little versions of the same tailoring." },
+] as const;
 
-function Collection({
-  title,
-  items,
-  dark,
-  eyebrow,
-}: {
-  title: string;
-  items: string[];
-  dark?: boolean;
-  eyebrow: string;
-}) {
+function Collections() {
+  const [tab, setTab] = useState<"men" | "kids">("men");
+  const [active, setActive] = useState(0);
+  const [failed, setFailed] = useState<string[]>([]);
+
+  const data = TABS.find((t) => t.key === tab)!;
+  const wanted = COLLECTION_IMAGES[tab][data.items[active]];
+  const stageSrc = wanted && !failed.includes(wanted) ? wanted : null;
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  const switchTab = (k: "men" | "kids") => {
+    setTab(k);
+    setActive(0);
+  };
+
   return (
-    <motion.article
-      variants={listVariants}
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true, amount: 0.25 }}
-      className={`relative flex min-h-[80svh] flex-col justify-between overflow-hidden px-6 py-14 sm:px-12 sm:py-20 ${
-        dark ? "bg-[#141211] text-white" : "bg-[#E9DDC6] text-[#141211]"
-      }`}
-    >
-      <div>
-        <motion.p variants={itemVariants} className="text-[10px] font-medium uppercase tracking-[.4em]" style={{ color: dark ? GOLD : "#8a6430" }}>
-          {eyebrow}
-        </motion.p>
-        <motion.h3
-          variants={itemVariants}
-          className="mt-4 leading-[.85]"
-          style={{ ...serif, fontWeight: 300, fontSize: "clamp(5rem, 15vw, 11rem)", letterSpacing: "-.03em" }}
-        >
-          {title}
-        </motion.h3>
+    <section id="collections" className="relative z-10 overflow-hidden bg-[#F6F1E9] px-5 py-20 text-[#141211] sm:px-10 sm:py-28">
+      {/* header + tabs */}
+      <div className="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-[10px] font-medium uppercase tracking-[.4em] text-[#8a6430]">The Collections</p>
+          <p
+            className="mt-3 max-w-md text-2xl leading-snug sm:text-3xl"
+            style={{ ...serif, fontWeight: 400 }}
+          >
+            {data.blurb}
+          </p>
+        </div>
+
+        <div role="tablist" aria-label="Collection" className="relative flex gap-10">
+          {TABS.map((t) => (
+            <button
+              key={t.key}
+              role="tab"
+              aria-selected={tab === t.key}
+              onClick={() => switchTab(t.key)}
+              className="relative pb-3 text-5xl transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#141211] sm:text-7xl"
+              style={{ ...serif, fontWeight: 300, letterSpacing: "-.02em", opacity: tab === t.key ? 1 : 0.35 }}
+            >
+              {t.label}
+              {tab === t.key && (
+                <motion.span
+                  layoutId="coll-underline"
+                  className="absolute inset-x-0 bottom-0 h-[2px]"
+                  style={{ background: GOLD }}
+                  transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                />
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <ul className="mt-14">
-        {items.map((name, i) => (
-          <motion.li
-            key={name}
-            variants={itemVariants}
-            className={`border-t ${dark ? "border-white/15" : "border-black/15"}`}
-          >
-            <motion.a
-              href="#"
-              whileHover={{ x: 18 }}
-              transition={{ type: "spring", stiffness: 300, damping: 24 }}
-              className="group flex items-baseline justify-between py-4"
+      <div className="mt-14 grid items-center gap-12 lg:mt-20 lg:grid-cols-[1.15fr_.85fr]">
+        {/* hover index */}
+        <div className="border-b border-black/15" onMouseLeave={() => setActive(0)}>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.ul
+              key={tab}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.35, ease: [0.2, 0.7, 0.2, 1] }}
             >
-              <span className="flex items-baseline gap-5">
-                <span className="w-6 text-[10px] tracking-[.2em] opacity-50">{String(i + 1).padStart(2, "0")}</span>
-                <span className="text-3xl transition-colors group-hover:text-[#C49452] sm:text-4xl" style={{ ...serif, fontWeight: 400 }}>
-                  {name}
-                </span>
-              </span>
-              <span className="text-lg opacity-0 transition-opacity duration-300 group-hover:opacity-100" style={{ color: GOLD }}>
-                &rarr;
-              </span>
-            </motion.a>
-          </motion.li>
-        ))}
-        <li className={`border-t ${dark ? "border-white/15" : "border-black/15"}`} />
-      </ul>
-    </motion.article>
+              {data.items.map((name, i) => {
+                const on = i === active;
+                return (
+                  <li key={name} className="border-t border-black/15">
+                    <Link
+                      href={`/${tab}?category=${slug(name)}`}
+                      onMouseEnter={() => setActive(i)}
+                      onFocus={() => setActive(i)}
+                      className="group flex items-center justify-between gap-6 py-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#141211] sm:py-3"
+                    >
+                      <span className="flex items-baseline gap-5">
+                        <span className="w-6 text-[10px] tracking-[.2em] text-black/40">{pad(i + 1)}</span>
+                        <span
+                          className="inline-block text-3xl transition-all duration-500 sm:text-4xl"
+                          style={{
+                            ...serif,
+                            fontWeight: 300,
+                            letterSpacing: "-.02em",
+                            color: on ? "#8a6430" : "#141211",
+                            transform: on ? "translateX(16px)" : "none",
+                            fontStyle: on ? "italic" : "normal",
+                          }}
+                        >
+                          {name}
+                        </span>
+                      </span>
+                      <span
+                        className="text-xl transition-all duration-500"
+                        style={{ color: GOLD, opacity: on ? 1 : 0, transform: on ? "none" : "translateX(-12px)" }}
+                      >
+                        &rarr;
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </motion.ul>
+          </AnimatePresence>
+        </div>
+
+        {/* arch stage */}
+        <div className="relative mx-auto hidden w-full max-w-[420px] lg:block">
+          {/* offset gold outline */}
+          <div
+            aria-hidden
+            className="absolute inset-0 translate-x-4 translate-y-4 rounded-t-[999px] border"
+            style={{ borderColor: GOLD, aspectRatio: "3 / 4" }}
+          />
+          <motion.div
+            animate={{ backgroundColor: data.arch }}
+            transition={{ duration: 0.7 }}
+            className="relative overflow-hidden rounded-t-[999px]"
+            style={{ aspectRatio: "3 / 4" }}
+          >
+            <div
+              aria-hidden
+              className="absolute inset-0"
+              style={{ background: "radial-gradient(60% 50% at 50% 60%, rgba(196,148,82,.35) 0%, transparent 70%)" }}
+            />
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.div
+                key={`${tab}-${active}`}
+                className="absolute inset-x-0 bottom-0 flex h-[92%] justify-center"
+                initial={{ opacity: 0, y: 30, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5, ease: [0.2, 0.7, 0.2, 1] }}
+              >
+                {stageSrc ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={stageSrc}
+                    alt={`${data.label} ${data.items[active]}`}
+                    className="h-full w-auto object-contain object-bottom drop-shadow-[0_24px_30px_rgba(0,0,0,.4)]"
+                    onError={() => setFailed((f) => [...f, stageSrc])}
+                  />
+                ) : (
+                  <Silhouette />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </motion.div>
+
+          {/* caption */}
+          <div className="mt-8 flex items-center justify-between">
+            <span className="text-xl italic" style={{ ...serif, color: "#8a6430" }}>
+              {data.items[active]}
+            </span>
+            <Link
+              href={`/${tab}`}
+              className="border-b border-[#141211] pb-1 text-[10px] font-medium uppercase tracking-[.3em] transition-colors hover:border-[#C49452] hover:text-[#8a6430] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#141211]"
+            >
+              View all {data.label}
+            </Link>
+          </div>
+        </div>
+
+        {/* mobile: single link, no stage */}
+        <Link
+          href={`/${tab}`}
+          className="self-start border-b border-[#141211] pb-1 text-[10px] font-medium uppercase tracking-[.3em] lg:hidden"
+        >
+          View all {data.label}
+        </Link>
+      </div>
+    </section>
   );
 }
 
@@ -511,8 +651,6 @@ export default function Home() {
   const lenisRef = useRef<Lenis | null>(null);
   const [hideHeader, setHideHeader] = useState(false);
   const [solidHeader, setSolidHeader] = useState(false);
-
-  const scrollTo = (target: string) => lenisRef.current?.scrollTo(target, { duration: 1.6 });
 
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -588,7 +726,7 @@ export default function Home() {
         .lenis.lenis-stopped{overflow:hidden}
       `}</style>
 
-      <Hero onScrollTo={scrollTo} />
+      <Hero />
 
       {/* Manifesto */}
       <section id="about" className="mf relative z-10 px-5 py-28 sm:px-10 sm:py-44">
@@ -597,7 +735,7 @@ export default function Home() {
           className="mx-auto max-w-6xl leading-[1.08]"
           style={{ ...serif, fontWeight: 400, fontSize: "clamp(2.2rem, 6.2vw, 6rem)" }}
         >
-          <SplitWords text="From the first kurtha to the last sherwani, Jubba House dresses every generation in the art of perfection." />
+          <SplitWords text="From the first kurta to the last sherwani, Jubba House dresses every generation in the art of perfection." />
         </p>
       </section>
 
@@ -605,10 +743,7 @@ export default function Home() {
       <Lookbook />
 
       {/* Collections */}
-      <section id="collections" className="relative z-10 grid lg:grid-cols-2">
-        <Collection title="Men" eyebrow="The Men's Collection" items={MEN} dark />
-        <Collection title="Kids" eyebrow="The Kids' Collection" items={KIDS} />
-      </section>
+      <Collections />
     </main>
   );
 }

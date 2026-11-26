@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useCart } from "./CartProvider";
 
 const GOLD = "#C49452";
 const serif = { fontFamily: "var(--font-display), Georgia, serif" } as const;
@@ -13,6 +14,8 @@ const NAV = [
   { label: "HOME", href: "/" },
   { label: "MEN", href: "/men" },
   { label: "KIDS", href: "/kids" },
+  { label: "ABOUT", href: "/about" },
+  { label: "CONTACT", href: "/contact" },
 ];
 
 type LenisLike = { scrollTo: (target: string | number, opts?: { duration?: number }) => void };
@@ -20,6 +23,12 @@ type LenisLike = { scrollTo: (target: string | number, opts?: { duration?: numbe
 export default function Header() {
   const pathname = usePathname();
   const isHome = pathname === "/";
+  const { count: cartCount } = useCart();
+
+  // the cart comes from localStorage, so show it only after this component has hydrated
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const count = mounted ? cartCount : 0;
 
   const [open, setOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
@@ -55,15 +64,17 @@ export default function Header() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  /** On the home page: smooth-scroll in place. On other pages: let <Link> navigate to /#section. */
+  /**
+   * On the home page, the Home / logo link scrolls back to the top.
+   * Every other link is left alone so <Link> navigates to its page.
+   */
   const handleClick = (e: React.MouseEvent, href: string) => {
     setOpen(false);
-    if (!isHome) return;
+    if (!isHome || href !== "/") return;
     e.preventDefault();
-    const hash = href === "/" ? "#top" : href.slice(1); // "/#about" -> "#about"
     const lenis = (window as unknown as { __lenis?: LenisLike }).__lenis;
-    if (lenis) lenis.scrollTo(hash, { duration: 1.6 });
-    else document.querySelector(hash)?.scrollIntoView({ behavior: "smooth" });
+    if (lenis) lenis.scrollTo(0, { duration: 1.6 });
+    else window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -84,22 +95,22 @@ export default function Header() {
           }`}
         >
           <div className="mx-auto flex h-[80px] max-w-[1600px] items-center justify-between px-5 sm:px-10">
-          {/* Logo (white plate, artwork zoomed slightly to crop the PNG's empty padding) */}
-<Link
-  href="/"
-  onClick={(e) => handleClick(e, "/")}
-  aria-label="Jubba House, home"
-  className="relative z-[60] block h-12 w-28 shrink-0 overflow-hidden bg-white sm:h-14 sm:w-32"
->
-  <Image
-    src="/logo.png"
-    alt="Jubba House"
-    fill
-    priority
-    sizes="128px"
-    className="origin-center scale-[2.6] object-contain"
-  />
-</Link>
+            {/* Logo (white plate, artwork zoomed slightly to crop the PNG's empty padding) */}
+            <Link
+              href="/"
+              onClick={(e) => handleClick(e, "/")}
+              aria-label="Jubba House, home"
+              className="relative z-[60] block h-12 w-28 shrink-0 overflow-hidden bg-white sm:h-14 sm:w-32"
+            >
+              <Image
+                src="/logo.png"
+                alt="Jubba House"
+                fill
+                priority
+                sizes="128px"
+                className="origin-center scale-[2.6] object-contain"
+              />
+            </Link>
 
             {/* Desktop nav */}
             <nav aria-label="Primary" className="hidden items-center gap-10 md:flex">
@@ -121,6 +132,24 @@ export default function Header() {
 
             {/* Right side */}
             <div className="flex items-center gap-3">
+              <Link
+                href="/cart"
+                aria-label={`Cart, ${count} ${count === 1 ? "item" : "items"}`}
+                className="relative flex h-11 w-11 items-center justify-center text-white/85 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+              >
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M5 8h14l-1 12H6L5 8z" />
+                  <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+                </svg>
+                {count > 0 && (
+                  <span
+                    className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-medium text-[#141211]"
+                    style={{ background: GOLD }}
+                  >
+                    {count}
+                  </span>
+                )}
+              </Link>
               <div className="hidden items-center gap-3 sm:flex">
                 <Link href="/login">
                   <motion.span
