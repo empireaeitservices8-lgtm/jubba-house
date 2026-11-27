@@ -173,7 +173,7 @@ function Hero() {
           playsInline
           preload="auto"
         >
-          <source src="/videos/hero.mp4" type="video/mp4" />
+          <source src="/videos/hero1.mp4" type="video/mp4" />
         </video>
         <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/20 to-black/75" />
       </div>
