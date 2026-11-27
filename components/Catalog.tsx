@@ -56,7 +56,7 @@ const SORTS = [
 const toggle = (arr: string[], v: string) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
 
 /** Products per page (9 = three rows of three on desktop). Change freely. */
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 6;
 
 /** 1 ... 4 5 6 ... 12 style page list. */
 function pageRange(current: number, total: number): (number | "gap")[] {
